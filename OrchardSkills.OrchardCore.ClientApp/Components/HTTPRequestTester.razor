@@ -160,7 +160,6 @@
     private string clientSecret = "0775dd13a9bb4566a103fc370c31e612";
     private string requestBodyToken = @"";
     private string requestBodyGraphQL = @"{ blogPost { displayText subtitle author publishedUtc markdownBody { markdown } } }";
-    private string bearerToken = @"{""token_type"":""Bearer"",""access_token"":""CfDJ8PuH_PsGeixBpj5LVvD9hsEY0t8zukobEMELpRFmAoEE7jmjw6UU6eNGW_ZOcfOc0Ht2WA1w4xvkBGFn-RvvecnHvyoWF9PpaXK4TjJSUNcb3W1B7LO47chnVTQ2dtXx704kqmS9vVQWyFM6jX2dBfo-JRw2UKUa-AOqns2OUudabHgNjjLhhI2aDJcOSjIOR4aHMY4cjxKl3bvLm239eP0svnufWPhvJZN7bBVdun0cc_nRfJhAAgqmxNdB-f0K0c4wNIM5YpEick44x1bzqkP1jdG-tNQ8WjuDN7gtcl8GEF_ZTPMJ10lWa2tmx-uf0DszJcV1CBWKJmI95dsRnBcEmQ3of2RhQjwTBmv7LwXsyM0DRKHG6txXtL2MwIsrVtr4Fugk5iOO9agP0d0RjqKF4V8UmZyBp0hT8chtSBXtsFJwT3ZB9ZsynEvVivdjHPyFARS4aWXGFowZb6A_xhU79wnPB_PXZsx8O8CdScJpnWCHXLdAHZBRpyRYooZcMCW8hLUglgomLH0K-BXvC0weR_KS5VLEzZe5bmZSO-UvOi2fWrg4SFtMt6LWxD7DB4mghxzi0HQozOYX_9yDx4gOlOyZ462wb-cbolK1XQ5xb_53VNbD1Nn9aCTq_XwF_dbeHu07DEnfEb9KHMgZkLnQfa15JJB7W_zpgjrjGTnFzyoE9erL3OcKNvUzPe6jxsLnqpcJ2loSKA5u8G5e6W4"",""expires_in"":3600}";
     private List<RequestHeader> requestHeadersToken = new List<RequestHeader>()
     {
       new RequestHeader() { Name = "Content-Type", Value = "application/x-www-form-urlencoded" },
@@ -168,6 +167,7 @@
     private List<RequestHeader> requestHeadersGraphQL = new List<RequestHeader>()
     {
       new RequestHeader() { Name = "Content-Type", Value = "application/graphql" },
+      new RequestHeader() { Name = "Authorization", Value = @"{""token_type"":""Bearer"",""access_token"":""CfDJ8PuH_PsGeixBpj5LVvD9hsEY0t8zukobEMELpRFmAoEE7jmjw6UU6eNGW_ZOcfOc0Ht2WA1w4xvkBGFn-RvvecnHvyoWF9PpaXK4TjJSUNcb3W1B7LO47chnVTQ2dtXx704kqmS9vVQWyFM6jX2dBfo-JRw2UKUa-AOqns2OUudabHgNjjLhhI2aDJcOSjIOR4aHMY4cjxKl3bvLm239eP0svnufWPhvJZN7bBVdun0cc_nRfJhAAgqmxNdB-f0K0c4wNIM5YpEick44x1bzqkP1jdG-tNQ8WjuDN7gtcl8GEF_ZTPMJ10lWa2tmx-uf0DszJcV1CBWKJmI95dsRnBcEmQ3of2RhQjwTBmv7LwXsyM0DRKHG6txXtL2MwIsrVtr4Fugk5iOO9agP0d0RjqKF4V8UmZyBp0hT8chtSBXtsFJwT3ZB9ZsynEvVivdjHPyFARS4aWXGFowZb6A_xhU79wnPB_PXZsx8O8CdScJpnWCHXLdAHZBRpyRYooZcMCW8hLUglgomLH0K-BXvC0weR_KS5VLEzZe5bmZSO-UvOi2fWrg4SFtMt6LWxD7DB4mghxzi0HQozOYX_9yDx4gOlOyZ462wb-cbolK1XQ5xb_53VNbD1Nn9aCTq_XwF_dbeHu07DEnfEb9KHMgZkLnQfa15JJB7W_zpgjrjGTnFzyoE9erL3OcKNvUzPe6jxsLnqpcJ2loSKA5u8G5e6W4"",""expires_in"":3600}" }
     };
     private System.Net.HttpStatusCode? responseStatusCodeToken;
     private System.Net.HttpStatusCode? responseStatusCodeGraphQL;
