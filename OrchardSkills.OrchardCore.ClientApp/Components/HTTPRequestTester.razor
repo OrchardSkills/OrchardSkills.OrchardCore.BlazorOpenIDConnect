@@ -1,0 +1,326 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<style>
+    p img {
+        width: 100%;
+    }
+</style>
+
+<div class="row">
+    <div class="col-2">
+        <div>Method:</div>
+        <select class="form-control" id="request-method" @bind="methodToken">
+            <option value="GET">GET</option>
+            <option value="POST" selected>POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+    </div>
+    <div class="col-10">
+        <div>URI:</div>
+        <input class="form-control" id="request-uri" @bind="uriToken" />
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col-6">
+        <div>Client Id:</div>
+        <input class="form-control" id="request-id" @bind="clientId" />
+    </div>
+    <div class="col-6">
+        <div>Client Secret:</div>
+        <input type="password" class="form-control" id="request-secret" @bind="clientSecret" />
+    </div>
+</div>
+<br />
+<button class="btn btn-success" id="send-request" @onclick="@GetToken">Get Token</button>
+<br />
+<br />
+@if (responseStatusCodeToken.HasValue)
+{
+    <h2>Token</h2>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Request Body</span>
+        </div>
+        <textarea style="min-height: 150px;" id="response-headers" readonly class="form-control"
+                  aria-label="With textarea">@requestBodyToken</textarea>
+    </div>
+    <br />
+    <br />
+    <p>
+        <div>Status:</div><span id="response-status">@responseStatusCodeToken</span>
+    </p>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Body</span>
+        </div>
+        <textarea id="response-body" style="min-height: 400px;" readonly class="form-control"
+                  aria-label="With textarea">@responseBodyToken</textarea>
+    </div>
+    <br />
+    <br />
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Headers</span>
+        </div>
+        <textarea style="min-height: 150px;" id="response-headers" readonly class="form-control"
+                  aria-label="With textarea">@responseHeadersToken</textarea>
+    </div>
+    <br />
+    <br />
+}
+<br />
+<br />
+<div class="row">
+    <div class="col-2">
+        <div>Method:</div>
+        <select class="form-control" id="request-method" @bind="methodGraphQL">
+            <option value="GET">GET</option>
+            <option value="POST" selected>POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+    </div>
+    <div class="col-10">
+        <div>URI:</div>
+        <input class="form-control" id="request-uri" @bind="uriGraphQL" />
+    </div>
+</div>
+<br />
+<br />
+<div class="input-group">
+    <div class="input-group-prepend">
+        <span class="input-group-text">Body</span>
+    </div>
+    <textarea id="request-body" @bind="requestBodyGraphQL" class="form-control" aria-label="With textarea"></textarea>
+</div>
+<br />
+<div class="pb-2">Request headers:</div>
+@foreach (var header in requestHeadersGraphQL)
+{
+    <div class="header-entry pb-2">
+        <div class="row">
+            <div class="col-6 ">
+                <label> Key:</label>
+                <input class="form-control" @bind="header.Name" />
+            </div>
+            <div class="col-4">
+                <label> Value: </label>
+                <input class="form-control" @bind="header.Value" />
+            </div>
+            <div class="col-2 d-flex align-items-end">
+
+                <button class="btn btn-danger" @onclick="@(e => RemoveHeader(header))">remove</button>
+            </div>
+        </div>
+    </div>
+}
+<button class="btn btn-primary " id="add-header" @onclick="@AddHeader">Add</button>
+<br />
+<br />
+<button class="btn btn-success" id="send-request" @onclick="@DoRequest">Send</button>
+<br />
+<br />
+@if (responseStatusCodeGraphQL.HasValue)
+{
+    <h2>Response</h2>
+    <p>
+        <div>Status:</div><span id="response-status">@responseStatusCodeGraphQL</span>
+    </p>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Body</span>
+        </div>
+        <textarea id="response-body" style="min-height: 400px;" readonly class="form-control"
+                  aria-label="With textarea">@responseBodyGraphQL</textarea>
+    </div>
+    <br />
+    <br />
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Headers</span>
+        </div>
+        <textarea style="min-height: 150px;" id="response-headers" readonly class="form-control"
+                  aria-label="With textarea">@responseHeadersGraphQL</textarea>
+    </div>
+    <br />
+    <br />
+    @((MarkupString)htmlMarkdown)
+}
+
+@code {
+    private string uriToken = "https://localhost:5001/connect/token";
+    private string methodToken = "POST";
+    private string uriGraphQL = "https://localhost:5001/api/graphql";
+    private string methodGraphQL = "POST";
+    private string clientId = "aa3edb7f7d6241778b1a2f4b6e0a3a84";
+    private string clientSecret = "0775dd13a9bb4566a103fc370c31e612";
+    private string requestBodyToken = @"";
+    private string requestBodyGraphQL = @"{ blogPost { displayText subtitle author publishedUtc markdownBody { markdown } } }";
+    private string bearerToken = @"{""token_type"":""Bearer"",""access_token"":""CfDJ8PuH_PsGeixBpj5LVvD9hsEY0t8zukobEMELpRFmAoEE7jmjw6UU6eNGW_ZOcfOc0Ht2WA1w4xvkBGFn-RvvecnHvyoWF9PpaXK4TjJSUNcb3W1B7LO47chnVTQ2dtXx704kqmS9vVQWyFM6jX2dBfo-JRw2UKUa-AOqns2OUudabHgNjjLhhI2aDJcOSjIOR4aHMY4cjxKl3bvLm239eP0svnufWPhvJZN7bBVdun0cc_nRfJhAAgqmxNdB-f0K0c4wNIM5YpEick44x1bzqkP1jdG-tNQ8WjuDN7gtcl8GEF_ZTPMJ10lWa2tmx-uf0DszJcV1CBWKJmI95dsRnBcEmQ3of2RhQjwTBmv7LwXsyM0DRKHG6txXtL2MwIsrVtr4Fugk5iOO9agP0d0RjqKF4V8UmZyBp0hT8chtSBXtsFJwT3ZB9ZsynEvVivdjHPyFARS4aWXGFowZb6A_xhU79wnPB_PXZsx8O8CdScJpnWCHXLdAHZBRpyRYooZcMCW8hLUglgomLH0K-BXvC0weR_KS5VLEzZe5bmZSO-UvOi2fWrg4SFtMt6LWxD7DB4mghxzi0HQozOYX_9yDx4gOlOyZ462wb-cbolK1XQ5xb_53VNbD1Nn9aCTq_XwF_dbeHu07DEnfEb9KHMgZkLnQfa15JJB7W_zpgjrjGTnFzyoE9erL3OcKNvUzPe6jxsLnqpcJ2loSKA5u8G5e6W4"",""expires_in"":3600}";
+    private List<RequestHeader> requestHeadersToken = new List<RequestHeader>()
+    {
+      new RequestHeader() { Name = "Content-Type", Value = "application/x-www-form-urlencoded" },
+    };  
+    private List<RequestHeader> requestHeadersGraphQL = new List<RequestHeader>()
+    {
+      new RequestHeader() { Name = "Content-Type", Value = "application/graphql" },
+    };
+    private System.Net.HttpStatusCode? responseStatusCodeToken;
+    private System.Net.HttpStatusCode? responseStatusCodeGraphQL;
+    private string responseBodyToken;
+    private string responseHeadersToken;
+    private string responseBodyGraphQL;
+    private string responseHeadersGraphQL;
+    private string htmlMarkdown = "<p></p>";
+    private string markdown = "";
+
+    public class ApiGraphQL
+    {
+        public data data { get; set; }
+    }
+
+    public class data
+    {
+        public blogPost[] blogPost { get; set; }
+    }
+
+    public class blogPost
+    {
+        public string displayText { get; set; }
+
+        public string subtitle { get; set; }
+
+        public string author { get; set; }
+
+        public string publishedUtc { get; set; }
+
+        public markdownBody markdownBody { get; set; }
+    }
+
+    public class markdownBody
+    {
+        public string markdown { get; set; }
+    }
+
+    private async void GetToken()
+    {
+        responseStatusCodeToken = null;
+
+        try
+        {
+            requestBodyToken = "client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=client_credentials";
+            var requestMessage = new HttpRequestMessage()
+            {
+                Method = new HttpMethod(methodToken),
+                RequestUri = new Uri(uriToken),
+                Content = string.IsNullOrEmpty(requestBodyToken) ? null : new StringContent(requestBodyToken)
+            };
+
+            foreach (var header in requestHeadersToken)
+            {
+                // StringContent automatically adds its own Content-Type header with default value "text/plain"
+                // If the developer is trying to specify a content type explicitly, we need to replace the default value,
+                // rather than adding a second Content-Type header.
+                if (header.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase) && requestMessage.Content != null)
+                {
+                    requestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(header.Value);
+                    continue;
+                }
+
+                if (!requestMessage.Headers.TryAddWithoutValidation(header.Name, header.Value))
+                {
+                    requestMessage.Content?.Headers.TryAddWithoutValidation(header.Name, header.Value);
+                }
+            }
+
+            var response = await Http.SendAsync(requestMessage);
+            responseStatusCodeToken = response.StatusCode;
+            responseBodyToken = await response.Content.ReadAsStringAsync();
+            var allHeaders = response.Headers.Concat(response.Content?.Headers ?? Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
+            responseHeadersToken = string.Join(Environment.NewLine, allHeaders.Select(pair => $"{pair.Key}: {pair.Value.First()}").ToArray());
+        }
+        catch (Exception ex)
+        {
+            if (ex is AggregateException)
+            {
+                ex = ex.InnerException;
+            }
+            responseStatusCodeToken = System.Net.HttpStatusCode.SeeOther;
+            responseBodyToken = ex.Message + Environment.NewLine + ex.StackTrace;
+        }
+
+        StateHasChanged();
+
+    }
+
+    private async void DoRequest()
+    {
+        responseStatusCodeGraphQL = null;
+
+        try
+        {
+            var requestMessage = new HttpRequestMessage()
+            {
+                Method = new HttpMethod(methodGraphQL),
+                RequestUri = new Uri(uriGraphQL),
+                Content = string.IsNullOrEmpty(requestBodyGraphQL) ? null : new StringContent(requestBodyGraphQL)
+            };
+
+            foreach (var header in requestHeadersGraphQL)
+            {
+                // StringContent automatically adds its own Content-Type header with default value "text/plain"
+                // If the developer is trying to specify a content type explicitly, we need to replace the default value,
+                // rather than adding a second Content-Type header.
+                if (header.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase) && requestMessage.Content != null)
+                {
+                    requestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(header.Value);
+                    continue;
+                }
+
+                if (!requestMessage.Headers.TryAddWithoutValidation(header.Name, header.Value))
+                {
+                    requestMessage.Content?.Headers.TryAddWithoutValidation(header.Name, header.Value);
+                }
+            }
+
+            var response = await Http.SendAsync(requestMessage);
+            responseStatusCodeGraphQL = response.StatusCode;
+            responseBodyGraphQL = await response.Content.ReadAsStringAsync();
+            var allHeaders = response.Headers.Concat(response.Content?.Headers ?? Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
+            responseHeadersGraphQL = string.Join(Environment.NewLine, allHeaders.Select(pair => $"{pair.Key}: {pair.Value.First()}").ToArray());
+            ApiGraphQL apiGraphQL = JsonSerializer.Deserialize<ApiGraphQL>(responseBodyGraphQL);
+            if (apiGraphQL.data.blogPost.Length > 0)
+            {
+                markdown = apiGraphQL.data.blogPost[0].markdownBody.markdown;
+                htmlMarkdown = "<p>" + Markdig.Markdown.ToHtml(markdown) + "</p>";
+            }
+        }
+        catch (Exception ex)
+        {
+            if (ex is AggregateException)
+            {
+                ex = ex.InnerException;
+            }
+            responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
+            responseBodyGraphQL = ex.Message + Environment.NewLine + ex.StackTrace;
+        }
+
+        StateHasChanged();
+    }
+
+    private void AddHeader()
+        => requestHeadersGraphQL.Add(new RequestHeader());
+
+    private void RemoveHeader(RequestHeader header)
+        => requestHeadersGraphQL.Remove(header);
+
+    private class RequestHeader
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
+    }
+}
